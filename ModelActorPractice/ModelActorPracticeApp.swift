@@ -11,16 +11,18 @@ import SwiftData
 @main
 struct ModelActorPracticeApp: App {
     
-    private let modelActor: ModelActorExample
-    
-    init() {
-        let storage = SwiftDataStorage()
-        self.modelActor = ModelActorExample(modelContainer: storage.modelContainer)
-    }
+    @State private var modelActorProvider = ModelActorProvider()
     
     var body: some Scene {
         WindowGroup {
-            ContentView(modelActor: modelActor)
+            if let modelActor = modelActorProvider.modelActor {
+                ContentView(modelActor: modelActor)
+            } else {
+                Color.white.ignoresSafeArea()
+                    .task {
+                        await modelActorProvider.createModelActor()
+                    }
+            }
         }
     }
 }
