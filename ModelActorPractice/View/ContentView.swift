@@ -9,9 +9,15 @@ import SwiftUI
 import SwiftData
 
 struct ContentView: View {
-    @Environment(\.modelContext) private var context
-    @Query(sort: \Note.createdAt, order: .reverse) private var notes: [Note]
+    
+    @State private var notes: [Note] = []
     @State private var text: String = ""
+    
+    private let modelActor: ModelActorExample
+    
+    init(modelActor: ModelActorExample) {
+        self.modelActor = modelActor
+    }
     
     var body: some View {
         VStack {
@@ -22,9 +28,12 @@ struct ContentView: View {
                     .textFieldStyle(.roundedBorder)
                 
                 Button {
-                    let note = Note(content: text)
-                    context.insert(note)
-                    text = ""
+                    Task {
+                        await modelActor.createNote(content: text)
+                        await MainActor.run { self.text = "" }
+                        
+                        await updateList()
+                    }
                 } label: {
                     Text("저장")
                 }.buttonStyle(.borderedProminent)
@@ -37,10 +46,18 @@ struct ContentView: View {
                 }
             }
         }
+        .task {
+            await updateList()
+        }
+    }
+    
+    private func updateList() async {
+        let datas = await modelActor.fetchNotes()
+        await MainActor.run { self.notes = datas }
     }
 }
 
-#Preview {
-    ContentView()
-        .modelContainer(for: Note.self)
-}
+//#Preview {
+//    let storage = SwiftDataStorage()
+//    ContentView(modelActor: ModelActorExample(modelContainer: storage.modelContainer))
+//}

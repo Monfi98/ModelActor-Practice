@@ -10,9 +10,17 @@ import SwiftData
 
 @main
 struct ModelActorPracticeApp: App {
+    
+    private let modelActor: ModelActorExample
+    
+    init() {
+        let storage = SwiftDataStorage()
+        self.modelActor = ModelActorExample(modelContainer: storage.modelContainer)
+    }
+    
     var body: some Scene {
         WindowGroup {
-            ContentView()
-        }.modelContainer(for: Note.self)
+            ContentView(modelActor: modelActor)
+        }
     }
 }
